@@ -8,16 +8,14 @@ nest new project-name
 npm run start:dev
 ```
 -  main.ts 기본적으로 3000번으로 실행 세팅 되어 있음
-```typescript
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+- .development.env 파일을 가리키도록 세팅
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
-}
-bootstrap();
+# 운영환경으로 실행
+
 ```
+- .production.env 파일을 가리키도록 세팅
+```
+
 
 ## 환경 변수 설정
 - 어플리케이션은 여러 환경에서 실행됨, 개발자 로컬, STAGE 환경, PRODUCTION 등의 환경으로 보통 구성
