@@ -197,6 +197,123 @@ const levels = {
 - 예외가 일어났을 때 로그를 남기거나 응답 객체를 원하는 대로 변경하고자 하는 등의 요구 사항을 해결하고자 할 때 사용
 - 예외가 발생 했을 때 모든 예외를 잡아서 요청 URL과 예외가 발생한 시각을 콘솔에 출력하는 예외 필터를 만들어 봄
 
+
+# NestJS Error Handling Guide
+
+## 에러 처리 시스템
+
+### 1. 예외 Import
+```typescript
+import { 
+  ResourceNotFoundException, 
+  ValidationException, 
+  CustomInternalServerErrorException 
+} from '../error/exceptions/custom.exceptions';
+```
+
+### 2. 주요 예외 타입 및 사용법
+
+#### 유효성 검사 실패 시
+```typescript
+throw new ValidationException({
+  message: 'DB 연결 정보가 올바르지 않습니다.',
+  config: connectionConfig
+});
+```
+
+#### 리소스를 찾을 수 없을 때
+```typescript
+throw new ResourceNotFoundException('요청한 데이터');
+```
+
+#### 서버 내부 오류 시
+```typescript
+throw new CustomInternalServerErrorException('처리 중 오류가 발생했습니다.');
+```
+
+#### 에러 체이닝 예시
+```typescript
+try {
+  // 비즈니스 로직
+} catch (error) {
+  if (error instanceof ValidationException) {
+    throw error;  // 기존 에러 전달
+  }
+  throw new CustomInternalServerErrorException('새로운 에러 메시지');
+}
+```
+
+### 3. 에러 응답 형식
+```json
+{
+  "message": "리소스를 찾을 수 없습니다",
+  "code": "RESOURCE_NOT_FOUND",
+  "timestamp": "2024-03-02T12:00:00.000Z",
+  "path": "/api/resources/123"
+}
+```
+
+### 4. 주요 기능
+- **일관된 에러 형식 유지**: 모든 에러 응답이 동일한 구조를 가짐
+- **자동 로깅**: 모든 에러는 자동으로 로깅됨
+- **명확한 에러 타입 구분**: 각 상황에 맞는 구체적인 에러 타입 제공
+- **Swagger 문서 자동 반영**: 에러 응답이 API 문서에 자동으로 포함
+- **의미 있는 에러 메시지**: 클라이언트가 이해하기 쉬운 에러 메시지 제공
+
+### 5. 에러 타입별 사용 예시
+
+#### ValidationException
+- 잘못된 입력값
+- 유효하지 않은 파라미터
+- 비즈니스 규칙 위반
+
+#### ResourceNotFoundException
+- 요청한 데이터가 없을 때
+- 삭제된 리소스 접근
+- 잘못된 ID 참조
+
+#### CustomInternalServerErrorException
+- 서버 내부 오류
+- 외부 서비스 연동 실패
+- 예상치 못한 오류
+
+### 6. 전역 에러 처리
+모든 예외는 전역 필터에 의해 자동으로 처리되어 일관된 형식의 응답으로 변환됩니다.
+
+```typescript
+// error.module.ts
+@Global()
+@Module({
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ErrorLoggingInterceptor,
+    },
+  ],
+})
+export class ErrorModule {}
+```
+
+### 7. 에러 코드 상수
+```typescript
+export const ERROR_CODES = {
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+} as const;
+```
+
+## 사용 시 주의사항
+1. 적절한 에러 타입 선택
+2. 의미 있는 에러 메시지 작성
+3. 민감한 정보는 에러 메시지에 포함하지 않기
+4. 필요한 경우에만 상세 정보 포함
+5. 일관된 에러 처리 패턴 유지
+
 ---
 
 ## 인터셉터

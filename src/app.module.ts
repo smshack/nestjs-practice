@@ -14,6 +14,7 @@ import { HealthModule } from './health/health.module';
 import { TodoModule } from './todo/todo.module';
 import { Todo } from './todo/entities/todo.entity';
 import { UploadModule } from './upload/upload.module';
+import { ErrorModule } from './error/error.module';
 
 @Module({
   imports: [
@@ -34,12 +35,7 @@ import { UploadModule } from './upload/upload.module';
     HealthModule,
     TodoModule,
     UploadModule,
-  ],
-  providers: [
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
+    ErrorModule,
   ],
 })
 export class AppModule implements OnModuleInit, NestModule {
