@@ -44,4 +44,14 @@ export class LogTestController {
   async testUnhandledException() {
     throw new Error('처리되지 않은 예외가 발생했습니다.');
   }
+
+  @Post('db/connect')
+  async testDbConnection(@Body() connectionConfig: any) {
+    return this.logTestService.handleDatabaseConnection(connectionConfig);
+  }
+
+  @Post('db/query')
+  async testDbQuery(@Body() body: { query: string; params: any }) {
+    return this.logTestService.handleDatabaseQuery(body.query, body.params);
+  }
 } 
