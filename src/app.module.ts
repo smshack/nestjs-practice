@@ -11,6 +11,8 @@ import { Logger } from 'winston';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { HealthModule } from './health/health.module';
+import { TodoModule } from './todo/todo.module';
+import { Todo } from './todo/entities/todo.entity';
 
 @Module({
   imports: [
@@ -21,13 +23,15 @@ import { HealthModule } from './health/health.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => 
-        typeOrmModuleOptions(configService)
+      useFactory: async (configService: ConfigService) => ({
+        ...typeOrmModuleOptions(configService),
+        entities: [Todo],
+      }),
     }),
     WinstonModule.forRoot(winstonConfig),
     LogTestModule,
     HealthModule,
-    // ... 다른 모듈들
+    TodoModule,
   ],
   providers: [
     {
