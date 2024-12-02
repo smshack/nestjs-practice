@@ -16,8 +16,17 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter(logger));
   // 전역 파이프 설정 추가
   app.useGlobalPipes(new ValidationPipe({
+    // DTO에 정의되지 않은 속성은 제거
     whitelist: true,
+    // 요청 데이터를 DTO 클래스의 인스턴스로 자동 변환
     transform: true,
+    // DTO에 정의되지 않은 속성이 있으면 요청 자체를 거부
+    forbidNonWhitelisted: true,
+    // 에러 응답에서 민감한 정보 제외
+    validationError: {
+    target: false,  // 원본 객체 제외
+    value: false    // 잘못된 값 제외
+  }
   }));
   
   const config = new DocumentBuilder()
