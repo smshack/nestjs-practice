@@ -10,6 +10,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
     }),
     WinstonModule.forRoot(winstonConfig),
     LogTestModule,
+    HealthModule,
     // ... 다른 모듈들
   ],
   providers: [
