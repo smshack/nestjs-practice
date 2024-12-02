@@ -19,6 +19,7 @@ async function bootstrap() {
     whitelist: true,
     transform: true,
   }));
+  
   const config = new DocumentBuilder()
     .setTitle('API 문서')
     .setDescription('API에 대한 설명입니다.')

@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, NotFoundException, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TodoService } from './todo.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { Todo } from './entities/todo.entity';
+import { PageOptionsDto } from '../common/dto/page-options.dto';
+import { PageDto } from '../common/dto/page.dto';
 
 @ApiTags('Todo')
 @Controller('todos')
@@ -22,9 +24,13 @@ export class TodoController {
 
   @Get()
   @ApiOperation({ summary: '할일 목록 조회' })
-  @ApiResponse({ status: 200, type: [Todo] })
-  async findAll() {
-    return await this.todoService.findAll();
+  @ApiResponse({ 
+    status: 200,
+    description: '페이징된 할일 목록',
+    type: PageDto
+  })
+  async findAll(@Query() pageOptionsDto: PageOptionsDto): Promise<PageDto<Todo>> {
+    return await this.todoService.findAll(pageOptionsDto);
   }
 
   @Get(':id')
