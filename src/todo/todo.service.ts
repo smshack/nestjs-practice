@@ -7,15 +7,29 @@ import { UpdateTodoDto } from './dto/update-todo.dto';
 import { PageOptionsDto } from '../common/dto/page-options.dto';
 import { PageDto } from '../common/dto/page.dto';
 import { PageMetaDto } from '../common/dto/page-meta.dto';
+import { ValidationException, ResourceNotFoundException } from '../error/exceptions/custom.exceptions';
 
 @Injectable()
 export class TodoService {
   constructor(
     @InjectRepository(Todo)
-    private todoRepository: Repository<Todo>,
+    private readonly todoRepository: Repository<Todo>,
   ) {}
 
   async create(createTodoDto: CreateTodoDto): Promise<Todo> {
+    // 중복 제목 검사
+    const existingTodo = await this.todoRepository.findOne({
+      where: { title: createTodoDto.title }
+    });
+
+    if (existingTodo) {
+      throw new ValidationException({
+        message: '이미 존재하는 제목입니다.',
+        field: 'title',
+        value: createTodoDto.title
+      });
+    }
+
     const todo = this.todoRepository.create(createTodoDto);
     return await this.todoRepository.save(todo);
   }
@@ -38,7 +52,7 @@ export class TodoService {
   async findOne(id: number): Promise<Todo> {
     const todo = await this.todoRepository.findOne({ where: { id } });
     if (!todo) {
-      throw new NotFoundException(`Todo #${id} not found`);
+      throw new ResourceNotFoundException('할일');
     }
     return todo;
   }
