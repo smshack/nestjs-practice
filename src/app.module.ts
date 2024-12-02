@@ -13,6 +13,7 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { HealthModule } from './health/health.module';
 import { TodoModule } from './todo/todo.module';
 import { Todo } from './todo/entities/todo.entity';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { Todo } from './todo/entities/todo.entity';
     LogTestModule,
     HealthModule,
     TodoModule,
+    UploadModule,
   ],
   providers: [
     {
