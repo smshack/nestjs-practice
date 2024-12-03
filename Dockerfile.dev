@@ -1,0 +1,34 @@
+FROM node:18-alpine
+
+# Alpine 패키지 설치
+RUN echo "https://dl-cdn.alpinelinux.org/alpine/v3.18/main" > /etc/apk/repositories && \
+    echo "https://dl-cdn.alpinelinux.org/alpine/v3.18/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache \
+    git \
+    curl \
+    openssh-client \
+    tzdata \
+    bash
+
+# 타임존 설정
+ENV TZ=Asia/Seoul
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# 패키지 파일 복사 및 설치
+COPY package*.json ./
+RUN npm install
+
+# 소스 코드 복사
+COPY . .
+
+# 개발 서버 포트 노출
+EXPOSE 3000
+
+# 개발 서버 실행
+CMD ["npm", "run", "start:dev"]
+
+# 볼륨 설정 - 소스 코드 변경 감지를 위해
+VOLUME ["/app/src"]

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: nestjs_app_dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .development.env
+    environment:
+      - NODE_ENV=development
+      - TZ=Asia/Seoul
+    depends_on:
+      - postgres
+    networks:
+      - dev-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: nestjs_postgres_dev
+    env_file:
+      - .development.env
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+      - TZ=${TZ}
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
