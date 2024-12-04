@@ -80,7 +80,7 @@ npm run start:dev
 - 들어오는 요청을 받고 처리된 결과를 응답으로 돌려주는 인터페이스
 - 엔트포인트 라우팅 메커니즘을 통해 각 컨트롤러가 받을 수 있는 요청을 분류
 - 사용목적에 따라 구분하면 구조적이고 모듈화된 코드 작성 가능
-
+<!-- 
 ```mermaid
 graph TD
     Start[Client Request] -->|HTTP Request| Router[Rest-API Router]
@@ -96,7 +96,7 @@ graph TD
     DBService -->|Query Database| Database[(DB)]
     RelayService -->|TURN/Relay Connection| TurnServer[(TURN Server)]
     PushService -->|MQTT Publish/Subscribe| MQTTBroker[(MQTT Broker)]
-```
+``` -->
 
 ## Provider
 - 앱이 제공하고자 하는 핵심 기능, 비즈니스 로직을 수행하는 역할
