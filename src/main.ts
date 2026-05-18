@@ -20,6 +20,18 @@ async function bootstrap() {
   // Winston 로거 인스턴스 가져오기
   const logger = app.get(WINSTON_MODULE_PROVIDER);
   
+  // =========================================================================
+  // 💡 [추가] CORS(Cross-Origin Resource Sharing) 설정
+  // 프론트엔드(Vite, React 등)에서 백엔드 API를 차단 없이 호출할 수 있도록 세팅합니다.
+  // =========================================================================
+  app.enableCors({
+    // 로컬 개발 환경(5173) 주소를 기본 허용하며, 환경변수가 있다면 실운영 도메인도 대응하도록 설정
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    // 프론트엔드와 JWT 토큰(인증 헤더)이나 쿠키 기반 인증을 안전하게 주고받기 위해 필수 설정
+    credentials: true, 
+  });
+
   // 전역 예외 필터 설정 - 모든 HTTP 예외를 잡아서 일관된 형식으로 처리
   app.useGlobalFilters(new HttpExceptionFilter(logger));
 
