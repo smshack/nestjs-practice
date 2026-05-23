@@ -4,14 +4,19 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { UserModule } from '../user/user.module'; // 💡 1. UserService를 가져오기 위해 UserModule 임포트 (폴더명 유의!)
 
 @Module({
   imports: [
-    // 1. Passport 미들웨어 생태계를 NestJS에 이식하기 위한 기본 모듈
+    // 2. Passport 미들웨어 생태계를 NestJS에 이식하기 위한 기본 모듈
     PassportModule,
-    // 2. JWT 서명/검증 모듈 선언
-    // service 내부(signAsync)에서 secret과 만료시간을 dynamic하게 제어하므로 설정은 비워둡니다.
+    
+    // 3. JWT 서명/검증 모듈 선언
     JwtModule.register({}),
+    
+    // 💡 4. 핵심 해결책: AuthModule 컨텍스트 내부에 UserModule을 주입합니다.
+    // 이를 통해 UserModule이 exports하고 있는 'UserService'를 AuthService가 가져다 쓸 수 있게 됩니다.
+    UserModule,
   ],
   controllers: [
     // 외부 HTTP 요청(Login, Refresh 등)의 라우팅 진입점
@@ -24,7 +29,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtStrategy,
   ],
   exports: [
-    // 다른 모듈(예: UserModule 등)에서 인증 상태 확인 및 가드를 재사용할 수 있도록 서비스 내보내기
+    // 다른 모듈에서 인증 상태 확인 및 가드를 재사용할 수 있도록 서비스 내보내기
     AuthService,
   ],
 })

@@ -5,13 +5,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 
-@ApiTags('users')
-@Controller('users')
+@ApiTags('user')
+@Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   /**
-   * [POST /users] - 신규 회원 가입
+   * [POST /user] - 신규 회원 가입
    * @param createUserDto 회원가입 요청 데이터 (username, password)
    */
   @Post()
@@ -37,7 +37,7 @@ export class UserController {
   }
 
   /**
-   * [GET /users/me] - 로그인한 현재 사용자 정보 조회
+   * [GET /user/me] - 로그인한 현재 사용자 정보 조회
    * @param req JwtAuthGuard(JwtStrategy)를 통해 유저 정보가 바인딩된 Express Request 객체
    */
   @Get('me')
