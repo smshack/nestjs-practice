@@ -16,6 +16,7 @@ import { Todo } from './todo/entities/todo.entity';
 import { UploadModule } from './upload/upload.module';
 import { ErrorModule } from './error/error.module';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AuthModule } from './auth/auth.module';
     UploadModule,
     ErrorModule,
     AuthModule,
+    UserModule,
   ],
 })
 export class AppModule implements OnModuleInit, NestModule {
