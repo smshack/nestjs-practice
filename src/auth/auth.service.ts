@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
-import { UserService } from '../user/user.service'; // 💡 프로젝트의 실제 서비스 폴더명(user 또는 users)에 맞게 경로를 확인하세요.
+import { UserService } from '../user/user.service'; 
 import { SignOptions } from 'jsonwebtoken';
 
 interface JwtPayload {
@@ -13,37 +13,36 @@ interface JwtPayload {
 
 @Injectable()
 export class AuthService {
-  // 1. 생성자를 통해 JWT 서비스와 실제 DB 처리를 담당하는 유저 서비스를 함께 주입받습니다.
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
   ) {}
 
   /**
-   * [로그인 처리, 토큰 쌍 발급 및 Refresh Token DB 저장]
-   * @param dto 로그인 요청 데이터 (username, password)
+   * [로그인 처리 및 토큰 데이터 반환]
+   * 컨트롤러가 쿠키를 직접 구울 수 있도록 원본 토큰 쌍을 유연하게 리턴합니다.
    */
   async login(dto: LoginDto) {
-    // [기존 mockUser 전면 제거] -> 2. DB에서 유저네임으로 실제 사용자 조회
+    // 1. DB에서 유저네임으로 실제 사용자 조회
     const user = await this.userService.findByUsername(dto.username);
     if (!user) {
       throw new UnauthorizedException('사용자가 없습니다.');
     }
 
-    // 3. 입력된 평문 비밀번호와 DB에 해싱되어 저장된 비밀번호 비교 검증
+    // 2. 입력된 평문 비밀번호와 DB의 해시 비밀번호 비교
     const isPasswordMatch = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordMatch) {
       throw new UnauthorizedException('비밀번호 오류');
     }
 
-    // 4. JWT 발급에 사용할 고유 비민감 정보 페이로드 구성
+    // 3. JWT 페이로드 구성
     const payload: JwtPayload = {
       sub: user.id,
       username: user.username,
       role: user.role,
     };
 
-    // 5. Access Token과 Refresh Token 멀티 비동기 생성 (성능 최적화)
+    // 4. Access Token과 Refresh Token 멀티 비동기 생성
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_ACCESS_SECRET,
@@ -55,17 +54,28 @@ export class AuthService {
       }),
     ]);
 
-    // 6. 보안 핵심: 발급된 Refresh Token을 그대로 저장하지 않고 다시 해싱하여 DB 유저 레코드에 업데이트
+    // 5. 발급된 Refresh Token을 해싱하여 DB에 기록 (보안 강화)
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     await this.userService.updateRefreshToken(user.id, hashedRefreshToken);
 
-    // 7. 클라이언트(프론트엔드/포스트맨)에게 최종 토큰 쌍 반환
-    return { accessToken, refreshToken };
+    // =========================================================================
+    // 🔑 컨트롤러가 브라우저에 쿠키를 정교하게 세팅(Max-Age 등)할 수 있도록
+    // 토큰 정보와 함께 해당 유저 객체 정보까지 포함하여 유연하게 구조를 반환합니다.
+    // =========================================================================
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      }
+    };
   }
 
   /**
    * [Access Token 재발급 (Refresh)]
-   * @param refreshToken 클라이언트가 제출한 원본 Refresh Token 문자열
+   * 쿠키 전략에서 추출되어 전달된 원본 refreshToken 문자열을 받아 검증 및 갱신합니다.
    */
   async refresh(refreshToken: string) {
     try {
@@ -74,9 +84,19 @@ export class AuthService {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
-      // 💡 실무 추가 가이드: 원래는 여기서 DB의 hashedRefreshToken과 bcrypt.compare()로 2차 검증을 하는 것이 안전합니다.
+      // 2. 🔑 [수정 완료] 엔티티 스펙에 맞춰 hashedRefreshToken을전부 'refreshToken'으로 변경
+      const user = await this.userService.findById(payload.sub);
+      if (!user || !user.refreshToken) {
+        throw new UnauthorizedException('Access Denied');
+      }
+
+      // 🔑 [수정 완료] bcrypt 비교 대상도 엔티티 규격인 user.refreshToken으로 일치화
+      const isRefreshTokenMatch = await bcrypt.compare(refreshToken, user.refreshToken);
+      if (!isRefreshTokenMatch) {
+        throw new UnauthorizedException('Invalid Token String');
+      }
       
-      // 2. 무결성이 확인되면 새로운 Access Token 재발급
+      // 3. 무결성이 확인되면 새로운 Access Token 발급
       const newAccessToken = await this.jwtService.signAsync(
         {
           sub: payload.sub,
@@ -89,6 +109,7 @@ export class AuthService {
         },
       );
 
+      // 컨트롤러에서 AccessToken 쿠키만 교체해줄 수 있도록 깔끔한 객체로 전달합니다.
       return { accessToken: newAccessToken };
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
