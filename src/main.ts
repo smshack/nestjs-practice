@@ -6,6 +6,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import cookieParser from 'cookie-parser';
 
 /**
  * 애플리케이션 부트스트랩 함수
@@ -21,14 +22,17 @@ async function bootstrap() {
   const logger = app.get(WINSTON_MODULE_PROVIDER);
   
   // =========================================================================
-  // 💡 [추가] CORS(Cross-Origin Resource Sharing) 설정
-  // 프론트엔드(Vite, React 등)에서 백엔드 API를 차단 없이 호출할 수 있도록 세팅합니다.
+  // 💡 [추가] 전역 쿠키 파서(Cookie Parser) 미들웨어 적용
+  // 들어오는 요청 헤더의 쿠키를 파싱하여 req.cookies 객체로 만들어 줍니다.
+  // CORS 및 글로벌 필터/파이프 적용보다 먼저 처리하는 것이 안전합니다.
   // =========================================================================
+  app.use(cookieParser());
+
+  // CORS(Cross-Origin Resource Sharing) 설정
   app.enableCors({
-    // 로컬 개발 환경(5173) 주소를 기본 허용하며, 환경변수가 있다면 실운영 도메인도 대응하도록 설정
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    // 프론트엔드와 JWT 토큰(인증 헤더)이나 쿠키 기반 인증을 안전하게 주고받기 위해 필수 설정
+    // 🔑 프론트엔드와 쿠키 기반 인증을 안전하게 주고받기 위해 true 설정 유지
     credentials: true, 
   });
 
