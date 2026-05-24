@@ -6,8 +6,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import cookieParser from 'cookie-parser';
-
+import cookieParser = require('cookie-parser');
 /**
  * 애플리케이션 부트스트랩 함수
  * NestJS 애플리케이션을 초기화하고 필요한 미들웨어, 파이프, 필터 등을 설정
